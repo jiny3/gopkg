@@ -24,7 +24,7 @@ type myFormatter struct {
 }
 
 var privateMsgformatter = &myFormatter{
-	Role:            "PRIVATE-MSG",
+	Role:            "DEFAULT",
 	TimestampFormat: "2006/01/02 - 15:04:05",
 	CustomCallerFormatter: func(f *runtime.Frame) string {
 		s := strings.Split(f.Function, ".")
