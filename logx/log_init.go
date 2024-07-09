@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"gitee.com/jiny1419/ucasnj-bbs/pkg/filex"
+	"github.com/JinY3/gopkg/filex"
 	"github.com/sirupsen/logrus"
 )
 

@@ -3,8 +3,8 @@ package mysqlx
 import (
 	"fmt"
 
-	"gitee.com/jiny1419/ucasnj-bbs/pkg/filex"
-	"gitee.com/jiny1419/ucasnj-bbs/pkg/logx"
+	"github.com/JinY3/gopkg/filex"
+	"github.com/JinY3/gopkg/logx"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
