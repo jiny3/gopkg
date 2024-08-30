@@ -25,15 +25,14 @@ func myFileInit() {
 	MyFile = logrus.New()
 	myLogWriter := []io.Writer{}
 	var logConf LogConfig
-	err := filex.ReadConfig("config", "log", &logConf)
+	err := filex.ConfigRead("config", "log", &logConf)
 	if err != nil {
 		logConf = LogConfig{
 			Writers: []string{"default.log"},
 		}
 	}
 	for _, path := range logConf.Writers {
-		filex.CreateFile(path)
-		w, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+		w, err := filex.FileOpen(path)
 		if err != nil {
 			logrus.Fatalf("open log file %s failed: %v", path, err)
 		}
@@ -42,7 +41,7 @@ func myFileInit() {
 
 	MyFile.SetOutput(io.MultiWriter(myLogWriter...))
 	MyFile.SetLevel(logrus.TraceLevel)
-	MyFile.SetFormatter(privateMsgformatter)
+	MyFile.SetFormatter(defaultFormatter)
 	MyFile.SetReportCaller(true)
 }
 
@@ -50,15 +49,14 @@ func myAllInit() {
 	MyAll = logrus.New()
 	myLogWriter := []io.Writer{os.Stdout}
 	var logConf LogConfig
-	err := filex.ReadConfig("config", "log", &logConf)
+	err := filex.ConfigRead("config", "log", &logConf)
 	if err != nil {
 		logConf = LogConfig{
 			Writers: []string{"default.log"},
 		}
 	}
 	for _, path := range logConf.Writers {
-		filex.CreateFile(path)
-		w, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+		w, err := filex.FileOpen(path)
 		if err != nil {
 			logrus.Fatalf("open log file %s failed: %v", path, err)
 		}
@@ -67,6 +65,6 @@ func myAllInit() {
 
 	MyAll.SetOutput(io.MultiWriter(myLogWriter...))
 	MyAll.SetLevel(logrus.TraceLevel)
-	MyAll.SetFormatter(privateMsgformatter)
+	MyAll.SetFormatter(defaultFormatter)
 	MyAll.SetReportCaller(true)
 }
