@@ -23,7 +23,7 @@ type myFormatter struct {
 	CustomCallerFormatter func(*runtime.Frame) string
 }
 
-var privateMsgformatter = &myFormatter{
+var defaultFormatter = &myFormatter{
 	Role:            "DEFAULT",
 	TimestampFormat: "2006/01/02 - 15:04:05",
 	CustomCallerFormatter: func(f *runtime.Frame) string {
