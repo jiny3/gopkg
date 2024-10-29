@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/JinY3/gopkg/filex"
+	"github.com/jiny3/gopkg/filex"
 	"github.com/sirupsen/logrus"
 )
 

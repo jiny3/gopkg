@@ -1,8 +1,9 @@
-module github.com/JinY3/gopkg
+module github.com/jiny3/gopkg
 
 go 1.22.1
 
 require (
+	github.com/fatih/structs v1.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.19.0
 	gorm.io/driver/mysql v1.5.7
@@ -10,7 +11,6 @@ require (
 )
 
 require (
-	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
