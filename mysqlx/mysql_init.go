@@ -15,15 +15,15 @@ func init() {
 	var dbconfig DBConfig
 	err := filex.ReadConfig("config", "db", &dbconfig)
 	if err != nil {
-		logx.MyAll.Error("read db config failed:", err)
+		logx.All.Error("read db config failed:", err)
 		return
 	}
 	MyDB, err = NewDB(dbconfig)
 	if err != nil {
-		logx.MyAll.Error("db connect failed:", err)
+		logx.All.Error("db connect failed:", err)
 		return
 	}
-	logx.MyAll.Info("db connect success")
+	logx.All.Info("db connect success")
 	MyDB.AutoMigrate(&User{}, &Article{}, &Comment{})
 }
 
