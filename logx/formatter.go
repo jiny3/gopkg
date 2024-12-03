@@ -3,13 +3,34 @@ package logx
 import (
 	"bytes"
 	"fmt"
+	"path"
+	"runtime"
 	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 )
 
-func (f *myFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+var defaultFormatter = &Formatter{
+	Role:            "DEFAULT",
+	TimestampFormat: "2006/01/02 - 15:04:05",
+	CustomCallerFormatter: func(f *runtime.Frame) string {
+		s := strings.Split(f.Function, ".")
+		funcName := s[len(s)-1]
+		return fmt.Sprintf("%s#%d:%s()", path.Base(f.File), f.Line, funcName)
+	},
+}
+
+type Formatter struct {
+	Role                  string
+	TimestampFormat       string
+	CustomCallerFormatter func(*runtime.Frame) string
+}
+
+// for old code
+type myFormatter Formatter
+
+func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	// 创建一个缓冲区
 	b := &bytes.Buffer{}
 
@@ -35,7 +56,7 @@ func (f *myFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *myFormatter) writeCaller(b *bytes.Buffer, entry *logrus.Entry) {
+func (f *Formatter) writeCaller(b *bytes.Buffer, entry *logrus.Entry) {
 	if entry.HasCaller() {
 		b.WriteString(" | ")
 		if f.CustomCallerFormatter != nil {
@@ -52,7 +73,7 @@ func (f *myFormatter) writeCaller(b *bytes.Buffer, entry *logrus.Entry) {
 	}
 }
 
-func (f *myFormatter) writeFields(b *bytes.Buffer, entry *logrus.Entry) {
+func (f *Formatter) writeFields(b *bytes.Buffer, entry *logrus.Entry) {
 	if len(entry.Data) != 0 {
 		fields := make([]string, 0, len(entry.Data))
 		for field := range entry.Data {
@@ -67,6 +88,6 @@ func (f *myFormatter) writeFields(b *bytes.Buffer, entry *logrus.Entry) {
 	}
 }
 
-func (f *myFormatter) writeField(b *bytes.Buffer, entry *logrus.Entry, field string) {
+func (f *Formatter) writeField(b *bytes.Buffer, entry *logrus.Entry, field string) {
 	fmt.Fprintf(b, " | %s:%v", field, entry.Data[field])
 }

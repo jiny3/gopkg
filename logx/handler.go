@@ -12,17 +12,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func DefaultConfig() struct {
+type config struct {
 	Level        logrus.Level
 	Formatter    logrus.Formatter
 	Output       io.Writer
 	ReportCaller bool
-} {
-	myLogWriter := []io.Writer{os.Stdout}
-	var logConf LogConfig
+}
+
+func DefaultConfig() config {
+	logWriter := []io.Writer{os.Stdout}
+	var logConf struct {
+		Writers []string
+	}
 	err := filex.ReadConfig("config", "log", &logConf)
 	if err != nil {
-		logConf = LogConfig{
+		logConf = struct{ Writers []string }{
 			Writers: []string{"default.log"},
 		}
 	}
@@ -31,25 +35,24 @@ func DefaultConfig() struct {
 		if err != nil {
 			logrus.Fatalf("open log file %s failed: %v", path, err)
 		}
-		myLogWriter = append(myLogWriter, w)
+		logWriter = append(logWriter, w)
 	}
-	return struct {
-		Level        logrus.Level
-		Formatter    logrus.Formatter
-		Output       io.Writer
-		ReportCaller bool
-	}{
-		Level: logrus.TraceLevel,
-		Formatter: &myFormatter{
-			Role:            "DEFAULT",
-			TimestampFormat: "2006/01/02 - 15:04:05",
-			CustomCallerFormatter: func(f *runtime.Frame) string {
-				s := strings.Split(f.Function, ".")
-				funcName := s[len(s)-1]
-				return fmt.Sprintf("%s#%d:%s()", path.Base(f.File), f.Line, funcName)
-			},
-		},
-		Output:       io.MultiWriter(myLogWriter...),
+	return config{
+		Level:        logrus.TraceLevel,
+		Formatter:    DebugFormatter(),
+		Output:       io.MultiWriter(logWriter...),
 		ReportCaller: true,
+	}
+}
+
+func DebugFormatter() logrus.Formatter {
+	return &Formatter{
+		Role:            "DEFAULT",
+		TimestampFormat: "2006/01/02 - 15:04:05",
+		CustomCallerFormatter: func(f *runtime.Frame) string {
+			s := strings.Split(f.Function, ".")
+			funcName := s[len(s)-1]
+			return fmt.Sprintf("%s#%d:%s()", path.Base(f.File), f.Line, funcName)
+		},
 	}
 }
