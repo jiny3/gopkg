@@ -17,9 +17,8 @@ func ExampleRunner(tasks ...func()) int {
 	runFunc, err := runner.Listen(tasks...)
 	if err != nil {
 		panic(err)
-	} else {
-		defer runner.Close()
 	}
+	defer runner.Close()
 
 	for i := 0; i < 10; i++ {
 		runFunc()
