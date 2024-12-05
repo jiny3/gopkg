@@ -18,15 +18,9 @@ type runner struct {
 	f         func()
 }
 
-// 暂时不支持返回值
-type Task struct {
-	Func func(...any)
-	Args []any
-}
-
-// 创建一个 runner, 传入多个 Task, 每个 Task 会被执行一次
-func New(tasks ...Task) *runner {
-	if len(tasks) < 1 {
+// 创建一个 runner, 传入多个 func(), 顺序执行; 无入参, 无返回值, 推荐传入闭包函数
+func New(fs ...func()) *runner {
+	if len(fs) < 1 {
 		return &runner{
 			queue:     make(chan struct{}, 60),
 			closer:    make(chan struct{}),
@@ -34,35 +28,35 @@ func New(tasks ...Task) *runner {
 			f:         nil,
 		}
 	}
-	fs := func() {
-		for _, task := range tasks {
-			task.Func(task.Args...)
+	_fs := func() {
+		for _, f := range fs {
+			f()
 		}
 	}
 	return &runner{
 		queue:     make(chan struct{}, 60),
 		closer:    make(chan struct{}),
 		listening: false,
-		f:         fs,
+		f:         _fs,
 	}
 }
 
-// 监听 runner, 若不传入 Task, 则只监听初始化时传入的 Task, 若传入 Task, 则追加监听传入的 Task
-func (r *runner) Listen(tasks ...Task) (func(), error) {
+// 监听 runner, 若不传入 func(), 则只执行初始化时传入的 func(), 若传入 func(), 则追加执行传入的 func()
+func (r *runner) Listen(fs ...func()) (func(), error) {
 	if r.listening {
 		return nil, fmt.Errorf("runner is listening")
 	}
-	if len(tasks) > 0 {
+	if len(fs) > 0 {
 		hook := r.f
-		fs := func() {
+		_fs := func() {
 			if hook != nil {
 				hook()
 			}
-			for _, task := range tasks {
-				task.Func(task.Args...)
+			for _, f := range fs {
+				f()
 			}
 		}
-		r.f = fs
+		r.f = _fs
 	}
 	r.listening = true
 	defer func() {
@@ -95,22 +89,13 @@ func (r *runner) Close() {
 func (r *runner) run() {
 	select {
 	case r.queue <- struct{}{}:
-		return
 	default:
-		r.empty()
-		r.queue <- struct{}{}
 	}
 }
 
 func (r *runner) empty() {
 	// 清空 channel
-	full := true
-	for full {
-		select {
-		case <-r.queue:
-			continue
-		default:
-			full = false
-		}
+	for len(r.queue) > 0 {
+		<-r.queue
 	}
 }
