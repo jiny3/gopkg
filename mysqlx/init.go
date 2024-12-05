@@ -9,7 +9,20 @@ import (
 	"gorm.io/gorm"
 )
 
-var MyDB *gorm.DB
+var (
+	DB *gorm.DB
+
+	// for old code
+	Mydb *gorm.DB
+)
+
+type DBConfig struct {
+	User     string
+	Password string
+	Ip       string
+	Port     int
+	DBName   string
+}
 
 func init() {
 	var dbconfig DBConfig
@@ -18,13 +31,14 @@ func init() {
 		logx.All.Error("read db config failed:", err)
 		return
 	}
-	MyDB, err = NewDB(dbconfig)
+	DB, err = NewDB(dbconfig)
 	if err != nil {
 		logx.All.Error("db connect failed:", err)
 		return
 	}
 	logx.All.Info("db connect success")
-	MyDB.AutoMigrate(&User{}, &Article{}, &Comment{})
+	DB.AutoMigrate(&User{}, &Article{}, &Comment{})
+	Mydb = DB
 }
 
 func NewDB(dbconf DBConfig) (*gorm.DB, error) {

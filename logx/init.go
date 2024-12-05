@@ -14,15 +14,19 @@ var (
 	All  *logrus.Logger
 
 	// for old code
-	Mystd  = Std
-	Myfile = File
-	Myall  = All
+	Mystd  *logrus.Logger
+	Myfile *logrus.Logger
+	Myall  *logrus.Logger
 )
 
 func init() {
 	stdInit()
 	fileInit()
 	allInit()
+
+	Mystd = Std
+	Myfile = File
+	Myall = All
 }
 
 func stdInit() {
