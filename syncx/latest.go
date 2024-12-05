@@ -1,4 +1,4 @@
-package latestrunner
+package syncx
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
  * 效果: 传入一个函数, 短时间内多次调用, 只有最后一次(若近期该函数未被调用, 则还有第一次)调用会被执行, 从 O(n) 降到 O(1)
  */
 
-type runner struct {
+type latest struct {
 	queue     chan struct{}
 	closer    chan struct{}
 	listening bool
@@ -19,9 +19,9 @@ type runner struct {
 }
 
 // 创建一个 runner, 传入多个 func(), 顺序执行; 无入参, 无返回值, 推荐传入闭包函数
-func New(fs ...func()) *runner {
+func NewLatest(fs ...func()) *latest {
 	if len(fs) < 1 {
-		return &runner{
+		return &latest{
 			queue:     make(chan struct{}, 60),
 			closer:    make(chan struct{}),
 			listening: false,
@@ -33,7 +33,7 @@ func New(fs ...func()) *runner {
 			f()
 		}
 	}
-	return &runner{
+	return &latest{
 		queue:     make(chan struct{}, 60),
 		closer:    make(chan struct{}),
 		listening: false,
@@ -42,7 +42,7 @@ func New(fs ...func()) *runner {
 }
 
 // 监听 runner, 若不传入 func(), 则只执行初始化时传入的 func(), 若传入 func(), 则追加执行传入的 func()
-func (r *runner) Listen(fs ...func()) (func(), error) {
+func (r *latest) Listen(fs ...func()) (func(), error) {
 	if r.listening {
 		return nil, fmt.Errorf("runner is listening")
 	}
@@ -78,7 +78,7 @@ func (r *runner) Listen(fs ...func()) (func(), error) {
 	return r.run, nil
 }
 
-func (r *runner) Close() {
+func (r *latest) Close() {
 	if !r.listening {
 		return
 	}
@@ -86,14 +86,14 @@ func (r *runner) Close() {
 	r.empty()
 }
 
-func (r *runner) run() {
+func (r *latest) run() {
 	select {
 	case r.queue <- struct{}{}:
 	default:
 	}
 }
 
-func (r *runner) empty() {
+func (r *latest) empty() {
 	// 清空 channel
 	for len(r.queue) > 0 {
 		<-r.queue

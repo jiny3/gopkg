@@ -1,10 +1,10 @@
-package latestrunner_test
+package syncx_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/jiny3/gopkg/toolx/latestrunner"
+	"github.com/jiny3/gopkg/syncx"
 )
 
 func ExampleRunner(tasks ...func()) int {
@@ -12,13 +12,13 @@ func ExampleRunner(tasks ...func()) int {
 	counterTask := func() {
 		counter++
 	}
-	runner := latestrunner.New(counterTask)
+	lrunner := syncx.NewLatest(counterTask)
 
-	runFunc, err := runner.Listen(tasks...)
+	runFunc, err := lrunner.Listen(tasks...)
 	if err != nil {
 		panic(err)
 	}
-	defer runner.Close()
+	defer lrunner.Close()
 
 	for i := 0; i < 10; i++ {
 		runFunc()
