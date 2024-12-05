@@ -7,12 +7,10 @@ import (
 	"github.com/jiny3/gopkg/toolx/latestrunner"
 )
 
-func ExampleRunner(tasks ...latestrunner.Task) int {
+func ExampleRunner(tasks ...func()) int {
 	counter := 0
-	counterTask := latestrunner.Task{
-		Func: func(args ...any) {
-			counter++
-		},
+	counterTask := func() {
+		counter++
 	}
 	runner := latestrunner.New(counterTask)
 
@@ -33,7 +31,7 @@ func ExampleRunner(tasks ...latestrunner.Task) int {
 
 func TestExampleRunner(t *testing.T) {
 	type args struct {
-		tasks []latestrunner.Task
+		tasks []func()
 	}
 	tests := []struct {
 		name string
@@ -43,11 +41,9 @@ func TestExampleRunner(t *testing.T) {
 		{
 			name: "test",
 			args: args{
-				tasks: []latestrunner.Task{
-					{
-						Func: func(args ...any) {
-							time.Sleep(30 * time.Millisecond)
-						},
+				tasks: []func(){
+					func() {
+						time.Sleep(30 * time.Millisecond)
 					},
 				},
 			},
