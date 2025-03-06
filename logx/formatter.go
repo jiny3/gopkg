@@ -27,9 +27,6 @@ type Formatter struct {
 	CustomCallerFormatter func(*runtime.Frame) string
 }
 
-// for old code
-type myFormatter Formatter
-
 func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	// 创建一个缓冲区
 	b := &bytes.Buffer{}
