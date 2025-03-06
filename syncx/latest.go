@@ -18,7 +18,7 @@ type latest struct {
 	f         func()
 }
 
-// 创建一个 runner, 传入多个 func(), 顺序执行; 无入参, 无返回值, 推荐传入闭包函数
+// 创建一个 runner, 传入多个 func(), 顺序执行
 func NewLatest(fs ...func()) *latest {
 	if len(fs) < 1 {
 		return &latest{
