@@ -45,21 +45,7 @@ func FileCreate(path string) (*os.File, error) {
 	if err := DirCreate(dir); err != nil {
 		return nil, err
 	}
-	// if exist, return it
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
-		if err != nil {
-			return nil, err
-		}
-		return file, nil
-	} else if err != nil {
-		return nil, err
-	}
-	file, err := os.Create(path)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
+	return os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
 }
 
 func FileDelete(path string) error {
