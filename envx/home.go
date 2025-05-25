@@ -18,7 +18,7 @@ func Home() (string, error) {
 
 	// cross compile support
 
-	if runtime.GOOS == "win" {
+	if runtime.GOOS == "windows" {
 		return homeWindows()
 	}
 
