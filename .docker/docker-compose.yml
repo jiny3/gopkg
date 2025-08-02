@@ -1,0 +1,13 @@
+version: '3.3'
+services:
+  pulsar:
+    image: apachepulsar/pulsar:4.0.5
+    container_name: pulsar-standalone
+    ports:
+      - "6650:6650"   # Broker 服务端口
+      - "8080:8080"   # Admin REST API 端口
+    command: bin/pulsar standalone
+    volumes:
+      - ./data/pulsarx:/pulsar
+    environment:
+      PULSAR_MEM: "-Xms512m -Xmx512m"  # JVM 内存配置
