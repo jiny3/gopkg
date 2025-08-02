@@ -11,16 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var defaultFormatter = &Formatter{
-	Role:            "DEFAULT",
-	TimestampFormat: "2006/01/02 - 15:04:05",
-	CustomCallerFormatter: func(f *runtime.Frame) string {
-		s := strings.Split(f.Function, ".")
-		funcName := s[len(s)-1]
-		return fmt.Sprintf("%s#%d:%s()", path.Base(f.File), f.Line, funcName)
-	},
-}
-
 type Formatter struct {
 	Role                  string
 	TimestampFormat       string
@@ -87,4 +77,16 @@ func (f *Formatter) writeFields(b *bytes.Buffer, entry *logrus.Entry) {
 
 func (f *Formatter) writeField(b *bytes.Buffer, entry *logrus.Entry, field string) {
 	fmt.Fprintf(b, " | %s:%v", field, entry.Data[field])
+}
+
+func defaultFormatter() logrus.Formatter {
+	return &Formatter{
+		Role:            "DEFAULT",
+		TimestampFormat: "2006/01/02 - 15:04:05",
+		CustomCallerFormatter: func(f *runtime.Frame) string {
+			s := strings.Split(f.Function, ".")
+			funcName := s[len(s)-1]
+			return fmt.Sprintf("%s#%d:%s()", path.Base(f.File), f.Line, funcName)
+		},
+	}
 }
