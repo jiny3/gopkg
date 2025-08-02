@@ -3,17 +3,18 @@ package hookx
 import (
 	"net/http"
 
-	"github.com/jiny3/gopkg/configx"
-	"github.com/jiny3/gopkg/logx"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	"github.com/jiny3/gopkg/configx"
+	"github.com/jiny3/gopkg/logx"
 )
 
 var WithDefault = func() {
 	err := configx.Load("config/config.yaml")
 	if err != nil {
-		logx.Init(logrus.DebugLevel)
+		logx.MyLogrus()
 		logrus.WithError(err).Error("config load failed")
 		return
 	}
@@ -23,9 +24,9 @@ var WithDefault = func() {
 		_level = logrus.InfoLevel
 	}
 	if logPath == "" {
-		logx.Init(_level)
+		logx.InitLogrus(logx.WithLevel(_level), logx.WithOutput(true, "logs/default.log"))
 	} else {
-		logx.Init(_level, logPath)
+		logx.InitLogrus(logx.WithLevel(_level), logx.WithOutput(true, logPath))
 	}
 }
 
