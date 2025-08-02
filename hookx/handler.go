@@ -13,18 +13,18 @@ var (
 	onceMap      = sync.Map{}
 )
 
+func ExitWait() {
+	go exitWait()
+}
+
 func exitWait() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	<-sigs
-	exitRun()
-	os.Exit(0)
-}
-
-func exitRun() {
 	for _, exit := range exitList {
 		exit()
 	}
+	os.Exit(0)
 }
 
 func onceRun(hooks []*func()) {

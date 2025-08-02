@@ -1,12 +1,8 @@
 package hookx
 
-func init() {
-	// init signal
-	go exitWait()
-}
-
 // add hooks to exitlist,
 // when receive os.Interrupt or syscall.SIGTERM signal, run all hooks
+// use ExitWait() to start a goroutine to wait for exit signal,
 func Exit(opts ...func()) {
 	exitListLock.Lock()
 	defer exitListLock.Unlock()
