@@ -7,11 +7,24 @@ import (
 )
 
 // parse path to dir, name, type
-func Parse(path string) struct {
+func Parse(_path string) struct {
 	Dir, Name, Type string
 } {
-	dir, file := path[:strings.LastIndex(path, "/")], path[strings.LastIndex(path, "/")+1:]
-	name, typ := file[:strings.LastIndex(file, ".")], file[strings.LastIndex(file, ".")+1:]
+	dir, file := filepath.Split(_path)
+	if dir == "" {
+		dir = "."
+	} else {
+		dir = strings.TrimSuffix(dir, string(filepath.Separator))
+	}
+	dot := strings.LastIndex(file, ".")
+	if dot < 0 {
+		dot = len(file)
+	}
+	name, typ := file[:dot], file[dot:]
+	if typ != "" {
+		typ = typ[1:]
+	}
+
 	return struct {
 		Dir, Name, Type string
 	}{dir, name, typ}
