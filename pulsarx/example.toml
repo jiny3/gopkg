@@ -1,0 +1,12 @@
+# Pulsar Client Configuration Example
+
+[client]
+url = "pulsar://localhost:6650"
+operation_timeout = 30
+connection_timeout = 10
+
+[producer]
+topic = "persistent://public/default/my-topic"
+
+[consumer]
+topic = "persistent://public/default/my-topic"
