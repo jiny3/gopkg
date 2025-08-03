@@ -6,8 +6,10 @@ import (
 	"path"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,10 +18,10 @@ import (
 type Formatter = TextFormatter
 
 type TextFormatter struct {
-	logrus.TextFormatter
 	Role                  string
 	TimestampFormat       string
 	CustomCallerFormatter func(*runtime.Frame) string
+	ForceColors           bool
 }
 
 func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
@@ -31,7 +33,45 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	level := strings.ToUpper(entry.Level.String())
 
 	// 自定义日志头
-	b.WriteString(fmt.Sprintf("[%s] %s | %s", role, timestamp, level))
+	if f.ForceColors {
+		switch entry.Level {
+		case logrus.TraceLevel, logrus.DebugLevel:
+			b.WriteString(strings.Join([]string{
+				"[" + f.colorize(role, int(color.FgYellow)) + "] ",
+				f.colorize(timestamp, int(color.FgGreen)),
+				" | ",
+				f.colorize(level, int(color.BgBlue)),
+			}, ""))
+		case logrus.WarnLevel:
+			b.WriteString(strings.Join([]string{
+				"[" + f.colorize(role, int(color.FgYellow)) + "] ",
+				f.colorize(timestamp, int(color.FgGreen)),
+				" | ",
+				f.colorize(level, int(color.BgYellow)),
+			}, ""))
+		case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
+			b.WriteString(strings.Join([]string{
+				"[" + f.colorize(role, int(color.FgYellow)) + "] ",
+				f.colorize(timestamp, int(color.FgGreen)),
+				" | ",
+				f.colorize(level, int(color.BgRed)),
+			}, ""))
+		default:
+			b.WriteString(strings.Join([]string{
+				"[" + f.colorize(role, int(color.FgYellow)) + "] ",
+				f.colorize(timestamp, int(color.FgGreen)),
+				" | ",
+				f.colorize(level, int(color.BgBlue)),
+			}, ""))
+		}
+	} else {
+		b.WriteString(strings.Join([]string{
+			"[" + role + "] ",
+			timestamp,
+			" | ",
+			level,
+		}, ""))
+	}
 
 	// 写入caller
 	f.writeCaller(b, entry)
@@ -40,7 +80,17 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	f.writeFields(b, entry)
 
 	// 写入日志内容
-	b.WriteString(fmt.Sprintf("    \"%s\"", entry.Message))
+	if f.ForceColors {
+		b.WriteString(strings.Join([]string{
+			"    ",
+			f.colorize(entry.Message, int(color.FgGreen)),
+		}, ""))
+	} else {
+		b.WriteString(strings.Join([]string{
+			"    ",
+			entry.Message,
+		}, ""))
+	}
 
 	// 写入换行
 	b.WriteByte('\n')
@@ -51,16 +101,19 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 func (f *TextFormatter) writeCaller(b *bytes.Buffer, entry *logrus.Entry) {
 	if entry.HasCaller() {
 		b.WriteString(" | ")
+		if f.ForceColors {
+			entry.Caller.File = f.colorize(entry.Caller.File, int(color.Underline))
+		}
 		if f.CustomCallerFormatter != nil {
 			fmt.Fprint(b, f.CustomCallerFormatter(entry.Caller))
 		} else {
-			fmt.Fprintf(
-				b,
-				"%s#%d:%s()",
+			b.WriteString(strings.Join([]string{
 				entry.Caller.File,
-				entry.Caller.Line,
+				"#",
+				strconv.Itoa(entry.Caller.Line),
+				":",
 				entry.Caller.Function,
-			)
+			}, ""))
 		}
 	}
 }
@@ -81,7 +134,15 @@ func (f *TextFormatter) writeFields(b *bytes.Buffer, entry *logrus.Entry) {
 }
 
 func (f *TextFormatter) writeField(b *bytes.Buffer, entry *logrus.Entry, field string) {
-	fmt.Fprintf(b, " | %s:%v", field, entry.Data[field])
+	if f.ForceColors {
+		fmt.Fprintf(b, " | %s:%s", f.colorize(field, int(color.FgHiBlue)), f.colorize(fmt.Sprintf("%v", entry.Data[field]), int(color.FgBlue)))
+	} else {
+		fmt.Fprintf(b, " | %s:%v", field, entry.Data[field])
+	}
+}
+
+func (f *TextFormatter) colorize(s string, color int) string {
+	return strings.Join([]string{"\x1b[", strconv.Itoa(color), "m", s, "\x1b[0m"}, "")
 }
 
 func defaultFormatter() *TextFormatter {
@@ -93,8 +154,6 @@ func defaultFormatter() *TextFormatter {
 			funcName := s[len(s)-1]
 			return fmt.Sprintf("%s#%d:%s()", path.Base(f.File), f.Line, funcName)
 		},
-		TextFormatter: logrus.TextFormatter{
-			ForceColors: true,
-		},
+		ForceColors: true,
 	}
 }

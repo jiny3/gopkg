@@ -55,7 +55,7 @@ func WithAllText(logPath ...string) Option {
 			logWriters = append(logWriters, w)
 		}
 		f := defaultFormatter()
-		f.ForceColors = true
+		f.ForceColors = false
 		hook := &hook{
 			Writer:    io.MultiWriter(logWriters...),
 			Formatter: f,
