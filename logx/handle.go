@@ -39,7 +39,7 @@ func DefaultConfig() config {
 	}
 	return config{
 		Level:        logrus.TraceLevel,
-		Formatter:    defaultFormatter(),
+		Formatter:    defaultFormatter(true),
 		Output:       io.MultiWriter(logWriter...),
 		ReportCaller: true,
 	}
@@ -50,7 +50,7 @@ func initLogger(logger *logrus.Logger, opts ...Option) {
 		logger = logrus.New()
 	}
 	logger.SetLevel(logrus.InfoLevel)
-	logger.SetFormatter(defaultFormatter())
+	logger.SetFormatter(defaultFormatter(true))
 	logger.SetReportCaller(true)
 	for _, opt := range opts {
 		opt(logger)

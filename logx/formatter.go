@@ -38,30 +38,30 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		case logrus.TraceLevel, logrus.DebugLevel:
 			b.WriteString(strings.Join([]string{
 				"[" + role + "] ",
-				f.colorize(timestamp, int(color.FgGreen)),
-				" ",
-				f.colorize(level, int(color.BgBlue)),
+				colorize(timestamp, int(color.FgGreen)),
+				"  ",
+				colorize(level, int(color.BgBlue)),
 			}, ""))
 		case logrus.WarnLevel:
 			b.WriteString(strings.Join([]string{
 				"[" + role + "] ",
-				f.colorize(timestamp, int(color.FgGreen)),
-				" ",
-				f.colorize(level, int(color.BgYellow)),
+				colorize(timestamp, int(color.FgGreen)),
+				"  ",
+				colorize(level, int(color.BgYellow)),
 			}, ""))
 		case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
 			b.WriteString(strings.Join([]string{
 				"[" + role + "] ",
-				f.colorize(timestamp, int(color.FgGreen)),
-				" ",
-				f.colorize(level, int(color.BgRed)),
+				colorize(timestamp, int(color.FgGreen)),
+				"  ",
+				colorize(level, int(color.BgRed)),
 			}, ""))
 		default:
 			b.WriteString(strings.Join([]string{
 				"[" + role + "] ",
-				f.colorize(timestamp, int(color.FgGreen)),
-				" ",
-				f.colorize(level, int(color.BgBlue)),
+				colorize(timestamp, int(color.FgGreen)),
+				"  ",
+				colorize(level, int(color.BgBlue)),
 			}, ""))
 		}
 	} else {
@@ -81,10 +81,28 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	// 写入日志内容
 	if f.ForceColors {
-		b.WriteString(strings.Join([]string{
-			"    ",
-			f.colorize(entry.Message, int(color.FgGreen)),
-		}, ""))
+		switch entry.Level {
+		case logrus.TraceLevel, logrus.DebugLevel:
+			b.WriteString(strings.Join([]string{
+				"    ",
+				colorize(entry.Message, int(color.FgHiBlue)),
+			}, ""))
+		case logrus.WarnLevel:
+			b.WriteString(strings.Join([]string{
+				"    ",
+				colorize(entry.Message, int(color.FgHiYellow)),
+			}, ""))
+		case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
+			b.WriteString(strings.Join([]string{
+				"    ",
+				colorize(entry.Message, int(color.FgHiRed)),
+			}, ""))
+		default:
+			b.WriteString(strings.Join([]string{
+				"    ",
+				colorize(entry.Message, int(color.FgHiGreen)),
+			}, ""))
+		}
 	} else {
 		b.WriteString(strings.Join([]string{
 			"    ",
@@ -101,9 +119,7 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 func (f *TextFormatter) writeCaller(b *bytes.Buffer, entry *logrus.Entry) {
 	if entry.HasCaller() {
 		if f.ForceColors {
-			b.WriteString(" ")
-			entry.Caller.File = f.colorize(entry.Caller.File, int(color.BgHiYellow))
-			entry.Caller.Function = f.colorize(entry.Caller.Function, int(color.FgYellow))
+			b.WriteString("  ")
 		} else {
 			b.WriteString(" | ")
 		}
@@ -138,25 +154,36 @@ func (f *TextFormatter) writeFields(b *bytes.Buffer, entry *logrus.Entry) {
 
 func (f *TextFormatter) writeField(b *bytes.Buffer, entry *logrus.Entry, field string) {
 	if f.ForceColors {
-		fmt.Fprintf(b, " %s:%s", f.colorize(field, int(color.FgHiBlue)), f.colorize(fmt.Sprintf("%v", entry.Data[field]), int(color.FgBlue)))
+		fmt.Fprintf(b, "  %s:%s", colorize(field, int(color.FgHiMagenta)), colorize(fmt.Sprintf("%v", entry.Data[field]), int(color.FgMagenta)))
 	} else {
 		fmt.Fprintf(b, " | %s:%v", field, entry.Data[field])
 	}
 }
 
-func (f *TextFormatter) colorize(s string, color int) string {
+func colorize(s string, color int) string {
 	return strings.Join([]string{"\x1b[", strconv.Itoa(color), "m", s, "\x1b[0m"}, "")
 }
 
-func defaultFormatter() *TextFormatter {
-	return &TextFormatter{
-		Role:            "DEFAULT",
-		TimestampFormat: "2006/01/02 - 15:04:05",
-		CustomCallerFormatter: func(f *runtime.Frame) string {
+func defaultFormatter(isColor bool) *TextFormatter {
+	var caller func(f *runtime.Frame) string
+	if isColor {
+		caller = func(f *runtime.Frame) string {
 			s := strings.Split(f.Function, ".")
 			funcName := s[len(s)-1]
-			return fmt.Sprintf("%s#%d:%s()", path.Base(f.File), f.Line, funcName)
-		},
-		ForceColors: true,
+			return colorize(strings.Join([]string{path.Base(f.File), "#", strconv.Itoa(f.Line), ":", funcName, "()"}, ""), int(color.Underline))
+		}
+	} else {
+		caller = func(f *runtime.Frame) string {
+			s := strings.Split(f.Function, ".")
+			funcName := s[len(s)-1]
+			return strings.Join([]string{path.Base(f.File), "#", strconv.Itoa(f.Line), ":", funcName, "()"}, "")
+		}
+	}
+
+	return &TextFormatter{
+		Role:                  "DEFAULT",
+		TimestampFormat:       "2006/01/02 - 15:04:05",
+		CustomCallerFormatter: caller,
+		ForceColors:           true,
 	}
 }
