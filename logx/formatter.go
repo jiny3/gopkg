@@ -165,25 +165,27 @@ func colorize(s string, color int) string {
 }
 
 func defaultFormatter(isColor bool) *TextFormatter {
-	var caller func(f *runtime.Frame) string
 	if isColor {
-		caller = func(f *runtime.Frame) string {
-			s := strings.Split(f.Function, ".")
-			funcName := s[len(s)-1]
-			return colorize(strings.Join([]string{path.Base(f.File), "#", strconv.Itoa(f.Line), ":", funcName, "()"}, ""), int(color.Underline))
-		}
-	} else {
-		caller = func(f *runtime.Frame) string {
-			s := strings.Split(f.Function, ".")
-			funcName := s[len(s)-1]
-			return strings.Join([]string{path.Base(f.File), "#", strconv.Itoa(f.Line), ":", funcName, "()"}, "")
+		return &TextFormatter{
+			Role:            "DEFAULT",
+			TimestampFormat: "2006/01/02 - 15:04:05",
+			CustomCallerFormatter: func(f *runtime.Frame) string {
+				s := strings.Split(f.Function, ".")
+				funcName := s[len(s)-1]
+				return colorize(strings.Join([]string{path.Base(f.File), "#", strconv.Itoa(f.Line), ":", funcName, "()"}, ""), int(color.Underline))
+			},
+			ForceColors: true,
 		}
 	}
 
 	return &TextFormatter{
-		Role:                  "DEFAULT",
-		TimestampFormat:       "2006/01/02 - 15:04:05",
-		CustomCallerFormatter: caller,
-		ForceColors:           true,
+		Role:            "DEFAULT",
+		TimestampFormat: "2006/01/02 - 15:04:05",
+		CustomCallerFormatter: func(f *runtime.Frame) string {
+			s := strings.Split(f.Function, ".")
+			funcName := s[len(s)-1]
+			return strings.Join([]string{path.Base(f.File), "#", strconv.Itoa(f.Line), ":", funcName, "()"}, "")
+		},
+		ForceColors: true,
 	}
 }
