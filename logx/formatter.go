@@ -61,7 +61,7 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 				"[" + role + "] ",
 				colorize(timestamp, int(color.FgGreen)),
 				"  ",
-				colorize(level, int(color.BgBlue)),
+				colorize(level, int(color.BgGreen)),
 			}, ""))
 		}
 	} else {
