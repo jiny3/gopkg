@@ -18,6 +18,9 @@ func WithLevel(level logrus.Level) Option {
 
 func WithFormatter(formatter logrus.Formatter) Option {
 	return func(l *logrus.Logger) {
+		if formatter == nil {
+			return
+		}
 		l.SetFormatter(formatter)
 	}
 }
@@ -33,6 +36,9 @@ func WithCallerReport(report bool) Option {
 // logPath will write to the specified log files.
 func WithAllText(logPath ...string) Option {
 	return func(l *logrus.Logger) {
+		if len(logPath) == 0 {
+			return
+		}
 		curLevel := logrus.GetLevel()
 		levels := []logrus.Level{}
 		for _, level := range logrus.AllLevels {
@@ -63,6 +69,9 @@ func WithAllText(logPath ...string) Option {
 // It writes to the specified log files and includes only warning, error, fatal, and panic levels.
 func WithOpsJSON(logPath ...string) Option {
 	return func(l *logrus.Logger) {
+		if len(logPath) == 0 {
+			return
+		}
 		levels := []logrus.Level{
 			logrus.WarnLevel,
 			logrus.ErrorLevel,
@@ -90,6 +99,9 @@ func WithOpsJSON(logPath ...string) Option {
 // It writes to the specified log files and includes trace and debug levels.
 func WithDevJSON(logPath ...string) Option {
 	return func(l *logrus.Logger) {
+		if len(logPath) == 0 {
+			return
+		}
 		levels := []logrus.Level{
 			logrus.TraceLevel,
 			logrus.DebugLevel,
