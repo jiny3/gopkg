@@ -2,7 +2,6 @@ package logx
 
 import (
 	"io"
-	"os"
 
 	"github.com/sirupsen/logrus"
 
@@ -29,15 +28,19 @@ func WithCallerReport(report bool) Option {
 	}
 }
 
-// WithOutput sets the output for the logger.
-// std true will write to os.Stdout.
+// WithAllText sets the output for the logger.
+// level same as logrus.StandardLogger()
 // logPath will write to the specified log files.
-func WithOutput(std bool, logPath ...string) Option {
+func WithAllText(logPath ...string) Option {
 	return func(l *logrus.Logger) {
-		logWriters := []io.Writer{}
-		if std {
-			logWriters = append(logWriters, os.Stdout)
+		curLevel := logrus.GetLevel()
+		levels := []logrus.Level{}
+		for _, level := range logrus.AllLevels {
+			if level <= curLevel {
+				levels = append(levels, level)
+			}
 		}
+		logWriters := []io.Writer{}
 		for _, p := range logPath {
 			w, err := filex.FileOpen(p)
 			if err != nil {
@@ -45,6 +48,65 @@ func WithOutput(std bool, logPath ...string) Option {
 			}
 			logWriters = append(logWriters, w)
 		}
-		l.SetOutput(io.MultiWriter(logWriters...))
+		f := defaultFormatter()
+		f.ForceColors = true
+		hook := &hook{
+			Writer:    io.MultiWriter(logWriters...),
+			Formatter: f,
+			Level:     levels,
+		}
+		l.AddHook(hook)
+	}
+}
+
+// WithOpsJSON sets the logger to output JSON format for operational logs.
+// It writes to the specified log files and includes only warning, error, fatal, and panic levels.
+func WithOpsJSON(logPath ...string) Option {
+	return func(l *logrus.Logger) {
+		levels := []logrus.Level{
+			logrus.WarnLevel,
+			logrus.ErrorLevel,
+			logrus.FatalLevel,
+			logrus.PanicLevel,
+		}
+		logWriters := []io.Writer{}
+		for _, p := range logPath {
+			w, err := filex.FileOpen(p)
+			if err != nil {
+				logrus.WithError(err).WithField("path", p).Fatal("open log file failed")
+			}
+			logWriters = append(logWriters, w)
+		}
+		hook := &hook{
+			Writer:    io.MultiWriter(logWriters...),
+			Formatter: &logrus.JSONFormatter{},
+			Level:     levels,
+		}
+		l.AddHook(hook)
+	}
+}
+
+// WithDevJSON sets the logger to output JSON format for development logs.
+// It writes to the specified log files and includes trace and debug levels.
+func WithDevJSON(logPath ...string) Option {
+	return func(l *logrus.Logger) {
+		levels := []logrus.Level{
+			logrus.TraceLevel,
+			logrus.DebugLevel,
+		}
+		logWriters := []io.Writer{}
+		for _, p := range logPath {
+			w, err := filex.FileOpen(p)
+			if err != nil {
+				logrus.WithError(err).WithField("path", p).Fatal("open log file failed")
+			}
+			logWriters = append(logWriters, w)
+		}
+		hook := &hook{
+			Writer:    io.MultiWriter(logWriters...),
+			Formatter: &logrus.JSONFormatter{},
+			Level:     levels,
+		}
+		l.AddHook(hook)
 	}
 }

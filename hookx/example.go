@@ -24,9 +24,9 @@ var WithDefault = func() {
 		_level = logrus.InfoLevel
 	}
 	if logPath == "" {
-		logx.InitLogrus(logx.WithLevel(_level), logx.WithOutput(true, "logs/default.log"))
+		logx.InitLogrus(logx.WithLevel(_level), logx.WithAllText("logs/default.log"))
 	} else {
-		logx.InitLogrus(logx.WithLevel(_level), logx.WithOutput(true, logPath))
+		logx.InitLogrus(logx.WithLevel(_level), logx.WithAllText(logPath))
 	}
 }
 

@@ -50,7 +50,6 @@ func initLogger(logger *logrus.Logger, opts ...Option) {
 		logger = logrus.New()
 	}
 	logger.SetLevel(logrus.InfoLevel)
-	logger.SetOutput(os.Stdout)
 	logger.SetFormatter(defaultFormatter())
 	logger.SetReportCaller(true)
 	for _, opt := range opts {

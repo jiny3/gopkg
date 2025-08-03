@@ -5,5 +5,5 @@ import (
 )
 
 func MyLogrus() {
-	InitLogrus(WithLevel(logrus.DebugLevel), WithOutput(true, "logs/default.log"))
+	InitLogrus(WithLevel(logrus.DebugLevel), WithAllText("logs/default.log"))
 }
