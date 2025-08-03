@@ -37,28 +37,28 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		switch entry.Level {
 		case logrus.TraceLevel, logrus.DebugLevel:
 			b.WriteString(strings.Join([]string{
-				"[" + f.colorize(role, int(color.FgYellow)) + "] ",
+				"[" + role + "] ",
 				f.colorize(timestamp, int(color.FgGreen)),
-				" | ",
+				" ",
 				f.colorize(level, int(color.BgBlue)),
 			}, ""))
 		case logrus.WarnLevel:
 			b.WriteString(strings.Join([]string{
-				"[" + f.colorize(role, int(color.FgYellow)) + "] ",
+				"[" + role + "] ",
 				f.colorize(timestamp, int(color.FgGreen)),
 				" | ",
 				f.colorize(level, int(color.BgYellow)),
 			}, ""))
 		case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
 			b.WriteString(strings.Join([]string{
-				"[" + f.colorize(role, int(color.FgYellow)) + "] ",
+				"[" + role + "] ",
 				f.colorize(timestamp, int(color.FgGreen)),
 				" | ",
 				f.colorize(level, int(color.BgRed)),
 			}, ""))
 		default:
 			b.WriteString(strings.Join([]string{
-				"[" + f.colorize(role, int(color.FgYellow)) + "] ",
+				"[" + role + "] ",
 				f.colorize(timestamp, int(color.FgGreen)),
 				" | ",
 				f.colorize(level, int(color.BgBlue)),
@@ -100,9 +100,12 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 func (f *TextFormatter) writeCaller(b *bytes.Buffer, entry *logrus.Entry) {
 	if entry.HasCaller() {
-		b.WriteString(" | ")
 		if f.ForceColors {
-			entry.Caller.File = f.colorize(entry.Caller.File, int(color.Underline))
+			b.WriteString(" ")
+			entry.Caller.File = f.colorize(entry.Caller.File, int(color.BgHiYellow))
+			entry.Caller.Function = f.colorize(entry.Caller.Function, int(color.FgYellow))
+		} else {
+			b.WriteString(" | ")
 		}
 		if f.CustomCallerFormatter != nil {
 			fmt.Fprint(b, f.CustomCallerFormatter(entry.Caller))
@@ -135,7 +138,7 @@ func (f *TextFormatter) writeFields(b *bytes.Buffer, entry *logrus.Entry) {
 
 func (f *TextFormatter) writeField(b *bytes.Buffer, entry *logrus.Entry, field string) {
 	if f.ForceColors {
-		fmt.Fprintf(b, " | %s:%s", f.colorize(field, int(color.FgHiBlue)), f.colorize(fmt.Sprintf("%v", entry.Data[field]), int(color.FgBlue)))
+		fmt.Fprintf(b, " %s:%s", f.colorize(field, int(color.FgHiBlue)), f.colorize(fmt.Sprintf("%v", entry.Data[field]), int(color.FgBlue)))
 	} else {
 		fmt.Fprintf(b, " | %s:%v", field, entry.Data[field])
 	}
