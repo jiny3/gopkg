@@ -46,21 +46,21 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 			b.WriteString(strings.Join([]string{
 				"[" + role + "] ",
 				f.colorize(timestamp, int(color.FgGreen)),
-				" | ",
+				" ",
 				f.colorize(level, int(color.BgYellow)),
 			}, ""))
 		case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
 			b.WriteString(strings.Join([]string{
 				"[" + role + "] ",
 				f.colorize(timestamp, int(color.FgGreen)),
-				" | ",
+				" ",
 				f.colorize(level, int(color.BgRed)),
 			}, ""))
 		default:
 			b.WriteString(strings.Join([]string{
 				"[" + role + "] ",
 				f.colorize(timestamp, int(color.FgGreen)),
-				" | ",
+				" ",
 				f.colorize(level, int(color.BgBlue)),
 			}, ""))
 		}
