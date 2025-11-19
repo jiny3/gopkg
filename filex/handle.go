@@ -58,7 +58,7 @@ func FileCreate(path string) (*os.File, error) {
 	if err := DirCreate(dir); err != nil {
 		return nil, err
 	}
-	return os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+	return os.OpenFile(path, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0666)
 }
 
 func FileDelete(path string) error {

@@ -1,6 +1,7 @@
 package filex
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
@@ -73,6 +74,36 @@ func TestParse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Parse(tt.args.path); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parse() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFileCreate(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		path    string
+		wantErr bool
+	}{
+		{
+			name:    "create file in new directory",
+			path:    "path/to/new/file.txt",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, gotErr := FileCreate(tt.path)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("FileCreate() failed: %v", gotErr)
+				}
+				return
+			}
+			defer os.RemoveAll("path") // clean up after test
+			if tt.wantErr {
+				t.Fatal("FileCreate() succeeded unexpectedly")
 			}
 		})
 	}
