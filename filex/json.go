@@ -40,6 +40,7 @@ func JsonSet[T any](file string, entries []T) error {
 	defer f.Close()
 
 	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "    ")
 	if err := encoder.Encode(entries); err != nil {
 		return err
 	}
