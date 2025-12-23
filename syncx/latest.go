@@ -1,7 +1,7 @@
 package syncx
 
 import (
-	"fmt"
+	"context"
 )
 
 /*
@@ -11,91 +11,27 @@ import (
  * 效果: 传入一个函数, 短时间内多次调用, 只有最后一次(若近期该函数未被调用, 则还有第一次)调用会被执行, 从 O(n) 降到 O(1)
  */
 
-type latest struct {
-	queue     chan struct{}
-	closer    chan struct{}
-	listening bool
-	f         func()
-}
+// ListenLatest 传入多个 func(), 顺序执行，通过 submit() 提交执行请求
+func ListenLatest(ctx context.Context, fs ...func()) (submit func()) {
+	triggered := make(chan struct{}, 1)
 
-// 创建一个 runner, 传入多个 func(), 顺序执行
-func NewLatest(fs ...func()) *latest {
-	if len(fs) < 1 {
-		return &latest{
-			queue:     make(chan struct{}, 60),
-			closer:    make(chan struct{}),
-			listening: false,
-			f:         nil,
-		}
-	}
-	_fs := func() {
-		for _, f := range fs {
-			f()
-		}
-	}
-	return &latest{
-		queue:     make(chan struct{}, 60),
-		closer:    make(chan struct{}),
-		listening: false,
-		f:         _fs,
-	}
-}
-
-// 监听 runner, 若不传入 func(), 则只执行初始化时传入的 func(), 若传入 func(), 则追加执行传入的 func()
-func (r *latest) Listen(fs ...func()) (func(), error) {
-	if r.listening {
-		return nil, fmt.Errorf("runner is listening")
-	}
-	if len(fs) > 0 {
-		hook := r.f
-		_fs := func() {
-			if hook != nil {
-				hook()
-			}
-			for _, f := range fs {
-				f()
-			}
-		}
-		r.f = _fs
-	}
-	r.listening = true
-	defer func() {
-		r.listening = false
-	}()
 	go func() {
 		for {
 			select {
-			case <-r.closer:
+			case <-ctx.Done():
 				return
-			case <-r.queue:
-				r.empty()
-				if r.f != nil {
-					r.f()
+			case <-triggered:
+				for _, f := range fs {
+					f()
 				}
 			}
 		}
 	}()
-	return r.run, nil
-}
 
-func (r *latest) Close() {
-	if !r.listening {
-		return
-	}
-	r.closer <- struct{}{}
-	r.empty()
-}
-
-func (r *latest) run() {
-	select {
-	case r.queue <- struct{}{}:
-	default:
-	}
-}
-
-func (r *latest) empty() {
-	// 清空 channel
-	for len(r.queue) > 0 {
-		<-r.queue
+	return func() {
+		select {
+		case triggered <- struct{}{}:
+		default:
+		}
 	}
 }

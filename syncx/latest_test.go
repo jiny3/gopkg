@@ -1,49 +1,26 @@
 package syncx_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/jiny3/gopkg/syncx"
 )
 
-func ExampleRunner(tasks ...func()) int {
-	counter := 0
-	counterTask := func() {
-		counter++
-	}
-	lrunner := syncx.NewLatest(counterTask)
-
-	runFunc, err := lrunner.Listen(tasks...)
-	if err != nil {
-		panic(err)
-	}
-	defer lrunner.Close()
-
-	for i := 0; i < 10; i++ {
-		runFunc()
-		time.Sleep(1 * time.Millisecond)
-	}
-	time.Sleep(40 * time.Millisecond)
-	return counter
-}
-
-func TestExampleRunner(t *testing.T) {
-	type args struct {
-		tasks []func()
-	}
+func TestListenLatest(t *testing.T) {
+	testCounter := 0
 	tests := []struct {
 		name string
-		args args
+		fs   []func()
 		want int
 	}{
 		{
-			name: "test",
-			args: args{
-				tasks: []func(){
-					func() {
-						time.Sleep(30 * time.Millisecond)
-					},
+			name: "Test case 1",
+			fs: []func(){
+				func() {
+					testCounter++
+					time.Sleep(600 * time.Millisecond)
 				},
 			},
 			want: 2,
@@ -51,8 +28,14 @@ func TestExampleRunner(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExampleRunner(tt.args.tasks...); got != tt.want {
-				t.Errorf("ExampleRunner() = %v, want %v", got, tt.want)
+			submit := syncx.ListenLatest(context.Background(), tt.fs...)
+			for range 5 {
+				submit()
+				time.Sleep(100 * time.Millisecond)
+			}
+			time.Sleep(1 * time.Second)
+			if testCounter != tt.want {
+				t.Errorf("got %v, want %v", testCounter, tt.want)
 			}
 		})
 	}
