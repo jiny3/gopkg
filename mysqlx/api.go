@@ -43,6 +43,9 @@ func New(conf DBConfig) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.AutoMigrate(conf.Models...)
+	err = db.AutoMigrate(conf.Models...)
+	if err != nil {
+		return nil, err
+	}
 	return db, nil
 }
